@@ -1,72 +1,178 @@
-const express = require('express');
+const express = require("express");
+const fs = require("node:fs").promises;
+const path = require("node:path");
+const cors = require("cors");
+
 const app = express();
 const port = 3000;
 
+// Arreglado: Usamos RUTA en todo el archivo de forma coherente
+const RUTA = path.join(__dirname, "partidos.json");
 
+app.use(cors());
 app.use(express.json());
 
-// . El middleware de Logger tiene que ser una función con (req, res, next)
+// --- FUNCIONES DE PERSISTENCIA (MÓDULO FS) ---
+
+async function cargarPartidos() {
+    try {
+        // Corregido: RUTA_DATOS cambiada por RUTA
+        const contenido = await fs.readFile(RUTA, "utf-8");
+        return JSON.parse(contenido);
+        
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            console.log("⚠️ El archivo no existe. Creando uno nuevo vacío...");   
+            await fs.writeFile(RUTA, "[]", "utf-8");
+            return []; 
+        }
+        throw error;
+    }
+}
+
+async function guardarPartidos(partidos) {
+    await fs.writeFile(RUTA, JSON.stringify(partidos, null, 2), "utf-8");
+}
+
+// --- MIDDLEWARE LOGGER ---
 app.use((req, res, next) => {
-    // Imprime la fecha, el método (GET, POST...) y la URL en tiempo real
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next(); 
+    console.log(`${req.method} ${req.url}`);
+    next();
 });
 
-// . Array de tu entidad principal en memoria (Al menos 3-5 partidos de fútbol)
-const partidos = [
-    { id: 1, campo: "Polideportivo Carranque", precio: 5, jugadores: 12, estado: "disponible" },
-    { id: 2, campo: "Campo El Romeral", precio: 4.5, jugadores: 14, estado: "completo" },
-    { id: 3, campo: "Nuevo San Ignacio", precio: 6, jugadores: 8, estado: "disponible" },
-    { id: 4, campo: "Los Guindos", precio: 5.5, jugadores: 10, estado: "disponible" }
-];
+// --- RUTAS DE LA API ---
 
-// . Ruta GET /api/health para verificar que el servidor está vivo
-app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
-});
-
-// . GET /api/matches — devuelve el array completo
-app.get("/api/matches", (req, res) => {
-    res.json(partidos);
-});
-
-// . POST /api/matches — crea un nuevo partido
-app.post("/api/matches", (req, res) => {
-    // Sacamos directamente los datos limpios de dentro de req.body
-    const { campo, precio, jugadores } = req.body;
-    // Control de seguridad: ahora comprobamos las variables directas
-    if (!campo || !precio) {
-        return res.status(400).json({ error: "Faltan campos obligatorios (campo o precio)" });
+// GET todos
+app.get("/api/matches", async (req, res) => {
+    try {
+        const partidos = await cargarPartidos();
+        res.json(partidos);
+        
+    } catch (error) {
+        console.error("Error al leer los partidos:", error);
+        res.status(500).json({ error: "Error interno del servidor al leer los datos" });
     }
-
-    // Creamos el objeto del partido uniendo lo que nos ha llegado con lo automático
-    const nuevoPartido = {
-        id: partidos.length + 1,
-        campo,   // Esto es lo mismo que campo: campo
-        precio,  // Esto es lo mismo que precio: precio
-        jugadores,
-        estado: "disponible"
-    };
-    // Lo metemos al array global
-    partidos.push(nuevoPartido);
-
-    // Respondemos con el 201 de éxito
-    res.status(201).json(nuevoPartido);
 });
 
-// . GET /api/matches/:id — devuelve uno por id, con 404 si no existe
-app.get("/api/matches/:id", (req, res) => {
-  const idBuscar = Number(req.params.id); // Convertimos el string de la URL a número
-    const partidoEncontrado = partidos.find((partido) => partido.id === idBuscar);
-
-  // Si no existe, return temprano con el status 404 que pide el profesor
-    if (!partidoEncontrado) {
-    return res.status(404).json({ error: "Partido no encontrado" });
+// GET uno por ID
+app.get("/api/matches/:id", async (req, res) => {
+    try {
+        const partidos = await cargarPartidos();
+        const id = Number(req.params.id);
+        const partido = partidos.find(p => p.id === id);
+        if (!partido) return res.status(404).json({ error: "Partido no encontrado" });
+        res.json(partido);
+    } catch (error) {
+        res.status(500).json({ error: "Error interno del servidor" });
     }
+});
 
-    res.json(partidoEncontrado);
+// POST crear
+app.post("/api/matches", async (req, res) => {
+    try {
+        const partidos = await cargarPartidos();
+        const { campo, precio, jugadores } = req.body;
+        
+        if (!campo || !precio) {
+            return res.status(400).json({ error: "Faltan campos obligatorios (campo o precio)" });
+        }
+        
+        // Generación de ID basada en el archivo real
+        const nuevoId = partidos.length > 0 ? Math.max(...partidos.map(p => p.id)) + 1 : 1;
+
+        const nuevo = { 
+            id: nuevoId, 
+            campo, 
+            precio, 
+            jugadores: jugadores || 0, 
+            estado: "disponible" 
+        };
+        
+        partidos.push(nuevo);
+        // Corregido: Le pasamos 'partidos' a la función de guardar
+        await guardarPartidos(partidos); 
+        
+        res.status(201).json(nuevo);
+    } catch (error) {
+        res.status(500).json({ error: "Error interno al guardar" });
+    }
+});
+
+// PUT actualizar completo
+app.put("/api/matches/:id", async (req, res) => {
+    try {
+        const idBuscar = Number(req.params.id);
+        const partidos = await cargarPartidos(); 
+
+        const indiceEncontrado = partidos.findIndex((partido) => partido.id === idBuscar);
+
+        if (indiceEncontrado === -1) {
+            return res.status(404).json({ error: "Partido no encontrado para reemplazar" });
+        }
+
+        const { campo, precio, jugadores, estado } = req.body;
+        if (!campo || precio === undefined || jugadores === undefined || !estado) {
+            return res.status(400).json({ error: "Faltan campos obligatorios para el reemplazo completo (PUT)" });
+        }
+
+        const partidoActualizado = { id: idBuscar, campo, precio, jugadores, estado };
+        partidos[indiceEncontrado] = partidoActualizado;
+
+        await guardarPartidos(partidos);
+        res.json(partidoActualizado);
+    } catch (error) {
+        res.status(500).json({ error: "Error interno al actualizar" });
+    }
+});
+
+// PATCH actualización parcial
+app.patch("/api/matches/:id", async (req, res) => {
+    try {
+        const idBuscar = Number(req.params.id);
+        const partidos = await cargarPartidos(); // Leemos del archivo
+        
+        const partidoEncontrado = partidos.find((partido) => partido.id === idBuscar);
+
+        if (!partidoEncontrado) {
+            return res.status(404).json({ error: "Partido no encontrado para editar" });
+        }
+
+        const { campo, precio, jugadores, estado } = req.body;
+
+        if (campo !== undefined) partidoEncontrado.campo = campo;
+        if (precio !== undefined) partidoEncontrado.precio = precio;
+        if (jugadores !== undefined) partidoEncontrado.jugadores = jugadores;
+        if (estado !== undefined) partidoEncontrado.estado = estado;
+
+        await guardarPartidos(partidos); // Guardamos los cambios parciales
+        res.json(partidoEncontrado);
+    } catch (error) {
+        res.status(500).json({ error: "Error interno al editar" });
+    }
+});
+
+// DELETE borrar
+app.delete("/api/matches/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const partidos = await cargarPartidos(); // Leemos del archivo
+        
+        const indice = partidos.findIndex(p => p.id === id);
+        if (indice === -1){
+            return res.status(404).json({error: "Partido no encontrado"});
+        }
+        
+        const [partidoBorrado] = partidos.splice(indice, 1);
+        // Corregido: Le pasamos 'partidos' a la función de guardar
+        await guardarPartidos(partidos); 
+        
+        // Devolvemos el 200 con el objeto borrado (Opción A de la clase)
+        res.json({ mensaje: "Partido eliminado correctamente", partidoBorrado });
+    } catch (error) {
+        res.status(500).json({ error: "Error interno al borrar" });
+    }
 });
 
 app.listen(port, () => {
-    console.log(`Servidor funcionado en el puerto ${port}`);
+    console.log(`Servidor funcionando en el puerto ${port}`);
 });
