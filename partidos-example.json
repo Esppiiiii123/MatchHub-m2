@@ -1,6 +1,0 @@
-[
-    { "id": 1, "campo": "Polideportivo Carranque", "precio": 5, "jugadores": 12, "estado": "disponible" },
-    { "id": 2, "campo": "Campo El Romeral", "precio": 4.5, "jugadores": 14, "estado": "completo" },
-    { "id": 3, "campo": "Nuevo San Ignacio", "precio": 6, "jugadores": 8, "estado": "disponible" },
-    { "id": 4, "campo": "Los Guindos", "precio": 5.5, "jugadores": 10, "estado": "disponible" }
-]
