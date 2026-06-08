@@ -10,8 +10,12 @@ const registerRules = [
 ];
 
 const loginRules = [
-    body("email").isEmail().withMessage("El formato del correo electrónico no es válido").normalizeEmail(),
-    body("password").notEmpty().withMessage("La contraseña es obligatoria")
+    body("email")
+    .isEmail().withMessage("El formato del correo electrónico no es válido")
+    .normalizeEmail(),
+
+    body("password")
+    .notEmpty().withMessage("La contraseña es obligatoria")
 ];
 
 module.exports = {
