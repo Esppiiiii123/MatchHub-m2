@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const matchController = require("../controllers/match_controller");
 
+
 // Importamos las reglas de la caja de herramientas y el recolector de errores
 const { createMatchRules, updateMatchRules, deleteOrGetMatchRules } = require("../validators/matches_validators");
 const validate = require("../middlewares/validate");
