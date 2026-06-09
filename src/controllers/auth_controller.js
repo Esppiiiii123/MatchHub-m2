@@ -77,29 +77,20 @@ export const login = async (req, res) => {
         return res.status(500).json({ mensaje: "Error interno en el servidor al iniciar sesión" });
     }
 };
-export const quienSoy = (req, res) => {
+
+export const getProfile = async (req, res) => {
     try {
-        // 1. Extraer la cabecera Authorization
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            return res.status(401).json({ mensaje: "No se ha proporcionado ningún token" });
+        // El id viene de req.usuario.id gracias al middleware
+        const user = await User.findById(req.usuario.id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // 2. Separar la palabra "Bearer" del token real
-        // "Bearer xxxxx.yyyyy.zzzzz" -> ["Bearer", "xxxxx.yyyyy.zzzzz"]
-        const token = authHeader.split(" ")[1];
-
-        // 3. Verificar el token con el SECRETO del .env
-        // Si ha sido manipulado o ha caducado, saltará automáticamente al catch
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // 4. Si la firma es válida, recuperamos el ID del payload
-        return res.status(200).json({
-            mensaje: "Token verificado con éxito",
-            userId: decoded.id //  Aquí está el dueño de la pulsera
-        });
-
+        return res.status(200).json(user);
     } catch (error) {
-        return res.status(401).json({ mensaje: "Token inválido o expirado" });
+        console.error(error);
+        return res.status(500).json({ error: "Error al obtener el perfil" });
     }
 };
+
