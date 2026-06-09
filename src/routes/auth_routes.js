@@ -10,5 +10,6 @@ import validate from "../middlewares/validate.js";// Tu recolector de errores
 router.post("/register", registerRules, validate, authController.register);
 router.post("/login", loginRules, validate, authController.login);
 
+router.get("/quien-soy", authController.quienSoy);
 
 export default router;

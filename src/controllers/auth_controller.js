@@ -58,18 +58,48 @@ export const login = async (req, res) => {
             return res.status(401).json({ mensaje: "Credenciales incorrectas" });
         }
 
-        // 4. Si todo ha ido sobre ruedas, damos luz verde al Login con un 200 OK
-        // (Mañana en la Clase 29, aquí es donde fabricaremos y enviaremos el Token JWT)
+        // 🔑 2. NUEVO: Contraseña correcta -> ¡Fabricamos la pulsera!
+        // Metemos el ID en el payload y hacemos que caduque en 1 hora ("1h")
+        const token = jwt.sign(
+            { id: user._id }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: "1h" }
+        );
+
+        // 3. Devolvemos el token al cliente
         return res.status(200).json({
             mensaje: "Login correcto",
-            user: {
-                id: user._id,
-                email: user.email
-            }
+            token // 👈 El cliente (Thunder/Postman/React) se guardará esto
         });
 
     } catch (error) {
         console.error("❌ Error en el servidor durante el login:", error);
         return res.status(500).json({ mensaje: "Error interno en el servidor al iniciar sesión" });
+    }
+};
+export const quienSoy = (req, res) => {
+    try {
+        // 1. Extraer la cabecera Authorization
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ mensaje: "No se ha proporcionado ningún token" });
+        }
+
+        // 2. Separar la palabra "Bearer" del token real
+        // "Bearer xxxxx.yyyyy.zzzzz" -> ["Bearer", "xxxxx.yyyyy.zzzzz"]
+        const token = authHeader.split(" ")[1];
+
+        // 3. Verificar el token con el SECRETO del .env
+        // Si ha sido manipulado o ha caducado, saltará automáticamente al catch
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // 4. Si la firma es válida, recuperamos el ID del payload
+        return res.status(200).json({
+            mensaje: "Token verificado con éxito",
+            userId: decoded.id //  Aquí está el dueño de la pulsera
+        });
+
+    } catch (error) {
+        return res.status(401).json({ mensaje: "Token inválido o expirado" });
     }
 };
