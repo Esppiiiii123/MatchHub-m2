@@ -1,13 +1,14 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const authController = require("../controllers/auth_controller");
+import * as authController from "../controllers/auth_controller.js"; // Importamos las funciones del controlador de autenticación
 
 // Importamos la seguridad
-const { registerRules, loginRules } = require("../validators/auth_validators");
-const validate = require("../middlewares/validate"); // Tu recolector de errores 
+import { registerRules, loginRules } from "../validators/auth_validators.js"; // Reglas de validación para registro y login
+import validate from "../middlewares/validate.js";// Tu recolector de errores 
 
-// 🛡️ La ruta ahora tiene escolta antes de llegar al controlador
+// La ruta ahora tiene escolta antes de llegar al controlador
 router.post("/register", registerRules, validate, authController.register);
 router.post("/login", loginRules, validate, authController.login);
 
-module.exports = router;
+
+export default router;

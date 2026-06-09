@@ -1,6 +1,6 @@
-const { body } = require("express-validator");
+import { body } from "express-validator";
 
-const registerRules = [
+export const registerRules = [
     body("email")
         .isEmail().withMessage("El formato del correo electrónico no es válido")
         .normalizeEmail(), // 🧼 Limpia espacios, quita puntos raros y unifica a minúsculas
@@ -9,7 +9,7 @@ const registerRules = [
         .isLength({ min: 6 }).withMessage("La contraseña debe tener un mínimo de 6 caracteres")
 ];
 
-const loginRules = [
+export const loginRules = [
     body("email")
     .isEmail().withMessage("El formato del correo electrónico no es válido")
     .normalizeEmail(),
@@ -17,8 +17,3 @@ const loginRules = [
     body("password")
     .notEmpty().withMessage("La contraseña es obligatoria")
 ];
-
-module.exports = {
-    registerRules,
-    loginRules
-};

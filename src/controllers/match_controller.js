@@ -1,7 +1,7 @@
-const matchModel = require("../models/match_model");
+import * as matchModel from "../models/match_model.js"; // Importamos las funciones del modelo de partidos
 
-// ⚽ GET: Listar todos los partidos
-const getMatches = async (req, res) => {
+//  GET: Listar todos los partidos
+export const getMatches = async (req, res) => {
     try {
         const matches = await matchModel.getAll();
         return res.status(200).json(matches);
@@ -11,8 +11,8 @@ const getMatches = async (req, res) => {
     }
 };
 
-// 🔍 GET: Buscar un partido por su ID único de Mongo
-const getMatch = async (req, res) => {
+//  GET: Buscar un partido por su ID único de Mongo
+export const getMatch = async (req, res) => {
     try {
         const id = req.params.id; // 🚨 CAMBIO MONGO: Ya no se usa Number()
         const match = await matchModel.getById(id);
@@ -27,8 +27,8 @@ const getMatch = async (req, res) => {
     }
 };
 
-// ➕ POST: Crear un partido nuevo
-const createMatch = async (req, res) => {
+//  POST: Crear un partido nuevo
+export const createMatch = async (req, res) => {
     // 🛡️ CAMBIO VALIDATOR: ¡Borrados los 'if' policiales de comprobación manual!
     // Extraemos los campos directamente en inglés unificado
     const { field, price, date, players } = req.body;
@@ -43,8 +43,8 @@ const createMatch = async (req, res) => {
     }
 };
 
-// 🔄 PUT: Actualizar completo
-const updateMatch = async (req, res) => {
+//  PUT: Actualizar completo
+export const updateMatch = async (req, res) => {
     try {
         const id = req.params.id; // 🚨 CAMBIO MONGO: ID como String
         
@@ -61,8 +61,8 @@ const updateMatch = async (req, res) => {
     }
 };
 
-// 🩹 PATCH: Actualización parcial de campos sueltos
-const partialUpdateMatch = async (req, res) => {
+//  PATCH: Actualización parcial de campos sueltos
+export const partialUpdateMatch = async (req, res) => {
     try {
         const id = req.params.id; // 🚨 CAMBIO MONGO: ID como String
         
@@ -80,7 +80,7 @@ const partialUpdateMatch = async (req, res) => {
 };
 
 // 🗑️ DELETE: Eliminar partido de la base de datos
-const deleteMatch = async (req, res) => {
+export const deleteMatch = async (req, res) => {
     try {
         const id = req.params.id; // 🚨 CAMBIO MONGO: ID como String
         const deletedMatch = await matchModel.deleteMatch(id);
@@ -97,13 +97,4 @@ const deleteMatch = async (req, res) => {
         console.error("❌ Error al borrar partido:", error);
         return res.status(500).json({ error: "Error interno del servidor al intentar borrar" });
     }
-};
-
-module.exports = {
-    getMatches,
-    getMatch,
-    createMatch,
-    updateMatch,
-    partialUpdateMatch,
-    deleteMatch
 };

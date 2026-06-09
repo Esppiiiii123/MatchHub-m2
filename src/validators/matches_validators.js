@@ -1,7 +1,7 @@
-const { body, param } = require("express-validator");
+import { body, param } from 'express-validator';
 
 // 1. 🛡️ Reglas estrictas para cuando se crea un partido nuevo (POST)
-const createMatchRules = [
+export const createMatchRules = [
     body("field")
         .notEmpty().withMessage("El nombre del campo de juego es obligatorio")
         .trim(),
@@ -16,7 +16,7 @@ const createMatchRules = [
 ];
 
 // 2. 🛡️ Reglas flexibles para cuando se actualiza o edita un partido (PUT / PATCH)
-const updateMatchRules = [
+export const updateMatchRules = [
     // Interceptamos IDs corruptos en la URL antes de que lleguen a Mongoose
     param("id")
         .isMongoId().withMessage("El formato del ID del partido no es válido"),
@@ -41,13 +41,7 @@ const updateMatchRules = [
 ];
 
 // 3. 🛡️ Regla rápida para peticiones que solo envían ID en la URL (GET por ID y DELETE)
-const deleteOrGetMatchRules = [
+export const deleteOrGetMatchRules = [
     param("id")
         .isMongoId().withMessage("El formato del ID del partido no es válido")
 ];
-
-module.exports = {
-    createMatchRules,
-    updateMatchRules,
-    deleteOrGetMatchRules
-};

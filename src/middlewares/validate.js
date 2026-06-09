@@ -1,4 +1,4 @@
-const { validationResult } = require("express-validator");
+import { validationResult } from 'express-validator';
 
 const validate = (req, res, next) => {
     // 1. Recolectamos los resultados del escáner de las reglas
@@ -19,4 +19,4 @@ const validate = (req, res, next) => {
     next();
 };
 
-module.exports = validate;
+export default validate;

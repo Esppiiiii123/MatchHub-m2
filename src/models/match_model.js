@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 // 1. El molde del partido (The Schema) - Versión Profesional Protegida
 const matchSchema = new mongoose.Schema({
@@ -39,34 +39,25 @@ const Match = mongoose.model("Match", matchSchema);
 // 3. Funciones del CRUD (Misma abstracción limpia, interfaz en inglés)
 // =======================================================
 
-async function getAll() {
+export async function getAll() {
     return await Match.find(); 
 }
 
-async function getById(id) {
+export async function getById(id) {
     return await Match.findById(id); 
 }
 
-async function create(matchData) {
+export async function create(matchData) {
     return await Match.create(matchData); 
 }
 
-async function update(id, matchData) {
+export async function update(id, matchData) {
     return await Match.findByIdAndUpdate(id, matchData, {
         new: true,          // Devuelve el documento ya modificado
         runValidators: true // Obliga a cumplir las reglas del Schema al editar
     });
 }
 
-async function deleteMatch(id) {
+export async function deleteMatch(id) {
     return await Match.findByIdAndDelete(id); 
 }
-
-// 4. Exportamos manteniendo los nuevos nombres corporativos
-module.exports = {
-    getAll,
-    getById,
-    create,
-    update,
-    deleteMatch
-};

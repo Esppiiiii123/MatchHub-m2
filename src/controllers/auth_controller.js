@@ -1,8 +1,8 @@
-const bcrypt = require("bcryptjs"); // Importamos el triturador de contraseñas
-const User = require("../models/user_model"); // Importamos la plantilla del usuario
+import bcrypt from "bcryptjs";// Importamos el triturador de contraseñas
+import User from "../models/user_model.js";// Importamos la plantilla del usuario
 
 // 🔑 POST: Registrar un nuevo usuario (/api/auth/register)
-const register = async (req, res) => {
+export const register = async (req, res) => {
     try {
         // 1. Abrimos la caja de la petición y sacamos los inputs
         const { email, password } = req.body;
@@ -37,7 +37,7 @@ const register = async (req, res) => {
 };
 
 // 🚪 POST: Iniciar sesión / Login (/api/auth/login)
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         // 1. Sacamos los datos que el usuario ha metido en el formulario de login
         const { email, password } = req.body;
@@ -72,10 +72,4 @@ const login = async (req, res) => {
         console.error("❌ Error en el servidor durante el login:", error);
         return res.status(500).json({ mensaje: "Error interno en el servidor al iniciar sesión" });
     }
-};
-
-// Exportamos las dos funciones juntas en un objeto para que las lean las rutas
-module.exports = {
-    register,
-    login
 };
