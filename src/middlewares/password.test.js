@@ -12,8 +12,29 @@ describe("Función esPasswordSegura()", () => {
         expect(resultado).toBe(true);
     });
 
-    it("Debería devolver false si la contraseña tiene menos de 6 caracteres", () => {
-        const resultado = esPasswordSegura("123");
+    it("Debería devolver false si la contraseña tiene 5 caracteres", () => {
+        const pasValido = "12345"
+
+        const resultado = esPasswordSegura(pasValido);
+
         expect(resultado).toBe(false); // Estructura compacta
     });
+
+    it("Debería devolver false si el campo esta vacío", () => {
+        const passValido = "";
+
+        const resultado = esPasswordSegura(passValido);
+
+        expect(resultado).toBe(false);
+    });
+
+    it("Debería devolver false si es undefined", () => {
+        const passValido = undefined;
+
+        const resultado = esPasswordSegura(passValido);
+
+        expect(resultado).toBe(false);
+
+    });
+
 });
