@@ -1,7 +1,7 @@
 import express from "express";
 import { createField, getFields } from "../controllers/field_controller.js";
 // Importamos tus herramientas de control de entrada
-import { createFieldRules } from "../validators/fields_validators.js";
+import { createFieldRules } from "../validators/field_validators.js";
 import validate from "../middlewares/validate.js";
 import verifyToken from "../middlewares/verifyToken.js";
 import isClub from "../middlewares/isClub.js";
