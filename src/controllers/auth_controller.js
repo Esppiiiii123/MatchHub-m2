@@ -78,19 +78,62 @@ export const login = async (req, res) => {
     }
 };
 
-export const getProfile = async (req, res) => {
+export const getUserProfile = async (req, res) => {
     try {
-        // El id viene de req.usuario.id gracias al middleware
-        const user = await User.findById(req.usuario.id).select("-password");
+        const userId = req.usuario.id;
 
-        if (!user) {
-            return res.status(404).json({ error: "Usuario no encontrado" });
-        }
-        return res.status(200).json(user);
-        
+        // Buscamos al usuario, pero le decimos a Mongoose: 
+        // "Ve a la cocina de los partidos y tráeme toda la información de los IDs que haya en favorites"
+        const userWithMatches = await User.findById(userId).populate("favorites");
+
+        res.status(200).json({
+            username: userWithMatches.username,
+            email: userWithMatches.email,
+            favorites: userWithMatches.favorites // ¡Aquí ya no van IDs, van los partidos completos!
+        });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Error al obtener el perfil" });
+        res.status(500).json({ error: "Error fetching profile" });
+    }
+};
+
+export const toggleFavoriteMatch = async (req, res) => {
+    try {
+        const userId = req.usuario.id; // Viene de tu middleware verifyToken
+        const { matchId } = req.body;  // El ID del partido que envían
+
+        // 1. Buscamos al usuario
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // 2. Comprobamos si el partido ya está en favoritos
+        // Mongoose nos permite usar .includes() directamente pasándole el string del ID
+        const isAlreadyFavorite = user.favorites.includes(matchId);
+
+        if (!isAlreadyFavorite) {
+            // CASO A: No es favorito -> Lo añadimos
+            user.favorites.push(matchId);
+            await user.save();
+            
+            return res.status(200).json({ 
+                message: "Match added to favorites successfully", 
+                favorites: user.favorites 
+            });
+        } else {
+            // CASO B: Ya era favorito -> Lo sacamos usando .pull() de Mongoose
+            // .pull() busca ese ID exacto en el array y lo extirpa. Es súper limpio.
+            user.favorites.pull(matchId);
+            await user.save();
+            
+            return res.status(200).json({ 
+                message: "Match removed from favorites successfully", 
+                favorites: user.favorites 
+            });
+        }
+
+    } catch (error) {
+        res.status(500).json({ error: "Server error managing favorites" });
     }
 };
 

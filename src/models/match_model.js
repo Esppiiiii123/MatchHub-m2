@@ -26,14 +26,14 @@ const matchSchema = new mongoose.Schema({
             values: ["open", "full", "cancelled"],
             message: "{VALUE} no es un estado válido para un partido"
         },
-        default: "open" // ⚽ Todo partido nace abierto a que se apunte gente
+        default: "open" // Todo partido nace abierto a que se apunte gente
     }
 }, {
     timestamps: true // Nos regala 'createdAt' y 'updatedAt' de forma nativa
 });
 
 // 2. Creamos el Modelo
-const Match = mongoose.model("Match", matchSchema);
+export const Match = mongoose.model("Match", matchSchema);
 
 // =======================================================
 // 3. Funciones del CRUD (Misma abstracción limpia, interfaz en inglés)

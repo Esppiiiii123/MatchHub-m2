@@ -1,22 +1,16 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: [true, "El email es obligatorio"],
-        unique: true, // Crea un índice único en Atlas para evitar correos duplicados
-        lowercase: true, // Fuerza a que se guarde siempre en minúsculas
-        trim: true
+    username: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    // 🌟 NUEVO: Control de roles para saber si es jugador o un polideportivo
+    role: { 
+        type: String, 
+        enum: ["player", "club"], 
+        default: "player" 
     },
-    password: {
-        type: String,
-        required: [true, "La contraseña es obligatoria"]
-    }
-}, { 
-    timestamps: true // Nos da 'createdAt' y 'updatedAt' gratis
-});
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Field" }]
+}, { timestamps: true });
 
-// Creamos el modelo intermediario
-const User = mongoose.model("User", userSchema);
-
-export default User;
+export default mongoose.model("User", userSchema);
